@@ -42,11 +42,68 @@ Cuando un conjunto de usuarios consulta un enésimo número (superior a 1000000)
 
 **Preguntas**
 
-* ¿Qué es un Azure Function?
-* ¿Qué es serverless?
-* ¿Qué es el runtime y que implica seleccionarlo al momento de crear el Function App?
-* ¿Por qué es necesario crear un Storage Account de la mano de un Function App?
-* ¿Cuáles son los tipos de planes para un Function App?, ¿En qué se diferencias?, mencione ventajas y desventajas de cada uno de ellos.
-* ¿Por qué la memoization falla o no funciona de forma correcta?
-* ¿Cómo funciona el sistema de facturación de las Function App?
+* **¿Qué es un Azure Function?**  
+  Es un servicio de computación serverless de Azure que permite ejecutar pequeñas piezas de código (funciones) en la nube, en respuesta a eventos o peticiones HTTP, sin necesidad de administrar servidores.
+
+* **¿Qué es serverless?**  
+  Es un modelo de computación en la nube donde el proveedor administra automáticamente la infraestructura. El usuario solo se enfoca en el código y paga únicamente por el tiempo de ejecución y los recursos consumidos.
+
+* **¿Qué es el runtime y qué implica seleccionarlo al momento de crear el Function App?**  
+  El runtime es el entorno de ejecución que interpreta y ejecuta el código de las funciones (por ejemplo, Node.js, .NET, Python). Seleccionarlo define el lenguaje soportado y las características disponibles para la Function App.
+
+* **¿Por qué es necesario crear un Storage Account de la mano de un Function App?**  
+  Azure Functions utiliza el Storage Account para almacenar archivos de configuración, logs, el código de las funciones y para gestionar el estado de ejecución (por ejemplo, colas y triggers).
+
+* **¿Cuáles son los tipos de planes para un Function App?, ¿En qué se diferencian?, mencione ventajas y desventajas de cada uno de ellos.**  
+  - **Consumption Plan:** Escala automáticamente, paga solo por el tiempo de ejecución. Ventaja: bajo costo para cargas variables. Desventaja: puede tener "cold start" y límites de recursos.
+  - **Premium Plan:** Escala automáticamente, pero permite instancias pre-calentadas (sin cold start) y mayor capacidad. Ventaja: mejor rendimiento, sin cold start. Desventaja: mayor costo.
+  - **Dedicated (App Service) Plan:** Usa recursos reservados (VMs dedicadas). Ventaja: integración con otras apps y control total de recursos. Desventaja: se paga aunque no haya ejecuciones.
+
+* **¿Por qué la memorization falla o no funciona de forma correcta?**  
+  Porque en Azure Functions el entorno puede reciclarse o escalar horizontalmente, perdiendo el estado en memoria (cache) entre ejecuciones o instancias. Además, el "cold start" reinicia el proceso y borra el cache.
+
+* **¿Cómo funciona el sistema de facturación de las Function App?**  
+  En el Consumption Plan, se factura por número de ejecuciones y tiempo de ejecución (GB-segundos). En Premium y Dedicated, se factura por el tiempo que las instancias están activas, independientemente del número de ejecuciones.
+
 * Informe
+## Informe de Escalabilidad y Optimización con Azure Functions
+
+### Resumen de la experiencia
+
+Durante el laboratorio se desplegó una función de Azure para calcular el enésimo número de Fibonacci. Inicialmente, la función utilizaba un enfoque recursivo puro, lo que resultaba en tiempos de respuesta elevados para valores grandes de `n` debido a la alta complejidad computacional.
+
+#### Tiempos antes de la memorización
+
+- Para valores altos de `n` (por ejemplo, 30,000 o más), los tiempos de respuesta podían superar los **varios segundos** o incluso provocar timeouts o errores por límite de recursos.
+- Cada petición realizaba todos los cálculos desde cero, sin aprovechar resultados previos.
+
+#### Tiempos después de implementar memorización
+
+- Tras implementar memorización (cache en memoria), la **primera llamada** para un valor grande de `n` seguía siendo costosa, pero las siguientes llamadas para el mismo o menores valores eran **casi instantáneas** (menos de 100 ms).
+- El tiempo de respuesta promedio mejoró drásticamente en las llamadas subsecuentes.
+
+#### Porcentaje de mejora
+
+- **Antes:** ~700 ms o más por petición (dependiendo de `n`).
+- **Después:** ~100 ms o menos en llamadas repetidas.
+- **Mejora estimada:**  
+
+Porcentaje de mejora = ((tiempo antes - tiempo después) / tiempo antes) × 100
+
+Porcentaje de mejora = ((700 - 100) / 700) × 100 ≈ 85.7% 
+  (El porcentaje puede ser mayor para valores grandes de `n`).
+
+### Cosas aprendidas
+
+- **Serverless:** Permite ejecutar código sin preocuparse por la infraestructura, pagando solo por el uso real.
+- **Azure Function:** Es una plataforma serverless de Azure que facilita la ejecución de funciones en la nube, escalando automáticamente según la demanda.
+- **Memorización:** Es una técnica efectiva para optimizar funciones recursivas, pero su efectividad depende de la persistencia del entorno de ejecución.
+- **Cache y cold start:** El cache en memoria solo es útil mientras la instancia de la función esté viva. Si Azure recicla la instancia (por escalado o inactividad), el cache se pierde (cold start), y la primera llamada vuelve a ser lenta.
+- **Consideraciones:**  
+  - No se debe depender del cache en memoria para datos críticos o persistentes.
+  - El cold start puede afectar la experiencia del usuario en escenarios serverless.
+  - Es importante entender el modelo de facturación y los límites de cada plan de Azure Functions.
+
+### Conclusión
+
+La memorización mejora significativamente el rendimiento de funciones recursivas en Azure Functions, pero su efectividad está limitada por la naturaleza efímera y escalable del entorno serverless. Es fundamental considerar estos aspectos al diseñar soluciones en la nube.
