@@ -1,0 +1,1 @@
+newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e ARSW_LOAD-BALANCING_AZURE.postman_environment.json -n 10

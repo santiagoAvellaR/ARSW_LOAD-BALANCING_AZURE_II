@@ -1,25 +1,30 @@
 var bigInt = require("big-integer");
+
+// Memoization cache (persiste mientras la función esté viva)
+const fibCache = {
+    0: bigInt.zero,
+    1: bigInt.one
+};
+
+function fibonacciMemo(n) {
+    if (fibCache[n] !== undefined) {
+        return fibCache[n];
+    }
+    // Recursivo con memorización
+    fibCache[n] = fibonacciMemo(n - 1).add(fibonacciMemo(n - 2));
+    return fibCache[n];
+}
+
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    let nth = req.body.nth
-    let nth_1 = bigInt.one;
-    let nth_2 = bigInt.zero;
-    let answer = bigInt.zero;
+    let nth = req.body.nth;
+    let answer;
 
     if (nth < 0)
-        throw 'must be greater than 0'
-    else if (nth === 0)
-        answer = nth_2
-    else if (nth === 1)
-        answer = nth_1
-    else {
-        for (var i = 0; i < nth - 1; i++) {
-            answer = nth_2.add(nth_1)
-            nth_2 = nth_1
-            nth_1 = answer
-        }
-    }
+        throw 'must be greater than 0';
+    else
+        answer = fibonacciMemo(nth);
 
     context.res = {
         body: answer.toString()
