@@ -1,0 +1,39 @@
+{
+    "info": {
+        "_postman_id": "329a103a-2a0a-4e74-9f38-383aa0e9e960",
+        "name": "ARSW_LOAD-BALANCING_AZURE_II",
+        "description": "Colección para probar la función Fibonacci desplegada en Azure Functions.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Fibonacci (POST)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"nth\": {{nth}}\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/Fibonacci",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "Fibonacci"
+                    ]
+                },
+                "description": "Calcula el n-ésimo número de Fibonacci usando Azure Functions."
+            },
+            "response": []
+        }
+    ],
+    "protocolProfileBehavior": {}
+}
